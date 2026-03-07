@@ -1,15 +1,11 @@
 "use client";
-import dynamic from "next/dynamic";
 
-const ApplyClient = dynamic(() => import("./components/ApplyClient"), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
-      로딩 중...
-    </div>
-  ),
-});
+import { useState, useEffect } from "react";
+import ApplyClient from "./components/ApplyClient";
 
 export default function ApplyPage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   return <ApplyClient />;
 }

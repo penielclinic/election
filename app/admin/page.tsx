@@ -1,15 +1,11 @@
 "use client";
-import dynamic from "next/dynamic";
 
-const AdminClient = dynamic(() => import("./components/AdminClient"), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
-      로딩 중...
-    </div>
-  ),
-});
+import { useState, useEffect } from "react";
+import AdminClient from "./components/AdminClient";
 
 export default function AdminPage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   return <AdminClient />;
 }
