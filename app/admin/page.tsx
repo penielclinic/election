@@ -56,6 +56,7 @@ interface RawCandidate {
   service_records: ServiceRecords;
   checklist_score: number;
   status: string;
+  photo_url: string | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -118,6 +119,7 @@ function toRawPrintData(c: RawCandidate): PrintCandidate & { status: string } {
     checklistScore: c.checklist_score,
     submittedAt: c.created_at,
     status: c.status,
+    photoUrl: c.photo_url,
   };
 }
 
@@ -176,15 +178,29 @@ function DetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* 모달 헤더 */}
-        <div className="flex items-center justify-between p-5 border-b">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              <span className="whitespace-nowrap">{candidate.name}</span>{" "}
-              <span className="text-amber-600 text-base font-semibold">{candidate.position}</span>
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              접수: {new Date(candidate.created_at).toLocaleString("ko-KR")}
-            </p>
+        <div className="flex items-center justify-between p-5 border-b gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* 증명사진 */}
+            {candidate.photo_url ? (
+              <img
+                src={candidate.photo_url}
+                alt="증명사진"
+                className="w-12 h-16 object-cover rounded border border-gray-200 shrink-0"
+              />
+            ) : (
+              <div className="w-12 h-16 border border-dashed border-gray-200 rounded flex items-center justify-center text-xs text-gray-300 shrink-0">
+                사진
+              </div>
+            )}
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                <span className="whitespace-nowrap">{candidate.name}</span>{" "}
+                <span className="text-amber-600 text-base font-semibold">{candidate.position}</span>
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                접수: {new Date(candidate.created_at).toLocaleString("ko-KR")}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={`px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[candidate.status]}`}>

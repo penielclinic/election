@@ -17,4 +17,7 @@ export function getSupabase(): SupabaseClient {
 // 기존 코드 호환용 — 클라이언트 렌더링 시에만 사용
 export const supabase = {
   from: (table: string) => getSupabase().from(table),
+  storage: {
+    from: (bucket: string) => getSupabase().storage.from(bucket),
+  },
 };

@@ -45,6 +45,7 @@ export interface PrintCandidate {
   serviceRecords?: ServiceRecords;
   checklistScore?: number | null;
   submittedAt?: string;
+  photoUrl?: string | null;
 }
 
 function esc(v: unknown): string {
@@ -160,8 +161,16 @@ export function printCandidatePDF(data: PrintCandidate): void {
   </style>
 </head>
 <body>
-  <h1>항존직 후보 지원서</h1>
-  <p class="org">해운대순복음교회 선거관리위원회${data.submittedAt ? " &nbsp;|&nbsp; 접수: " + new Date(data.submittedAt).toLocaleString("ko-KR") : ""}</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+    <div style="flex:1">
+      <h1 style="text-align:left">항존직 후보 지원서</h1>
+      <p class="org" style="text-align:left">해운대순복음교회 선거관리위원회${data.submittedAt ? " &nbsp;|&nbsp; 접수: " + new Date(data.submittedAt).toLocaleString("ko-KR") : ""}</p>
+    </div>
+    ${data.photoUrl
+      ? `<img src="${data.photoUrl}" style="width:72px;height:96px;object-fit:cover;border:1px solid #ccc;border-radius:3px;flex-shrink:0" />`
+      : `<div style="width:72px;height:96px;border:1.5px dashed #ccc;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#bbb;flex-shrink:0">사진</div>`
+    }
+  </div>
 
   <div class="section">
     <div class="section-title">기본 정보</div>

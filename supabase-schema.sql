@@ -57,9 +57,15 @@ create table if not exists election_candidates (
   -- 계산된 점수
   checklist_score integer,
 
+  -- 증명사진
+  photo_url text,
+
   -- 상태
   status text default 'submitted'
 );
+
+-- photo_url 컬럼 추가 (기존 테이블에 적용 시)
+-- alter table election_candidates add column if not exists photo_url text;
 
 -- RLS 활성화
 alter table election_candidates enable row level security;
