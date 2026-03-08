@@ -1194,7 +1194,7 @@ export default function ApplyPage() {
       let uploadedPhotoUrl: string | null = null;
       if (photoFile && photoFile.name) {
         const ext = photoFile.name.split(".").pop() || "jpg";
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const fileName = `public/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("candidate-photos")
           .upload(fileName, photoFile, { contentType: photoFile.type });
