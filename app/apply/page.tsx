@@ -1145,16 +1145,32 @@ export default function ApplyPage() {
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string>("");
 
-  const handlePhotoChange = (file: File) => {
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 300;
+        const ratio = Math.min(maxW / img.width, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = URL.createObjectURL(file);
+    });
+
+  const handlePhotoChange = async (file: File) => {
     if (!file.name) {
       setPhotoFile(null);
       setPhotoPreview("");
+      setPhotoUrl("");
       return;
     }
     setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
+    const compressed = await compressImage(file);
+    setPhotoPreview(compressed);
+    setPhotoUrl(compressed);
   };
 
   const onChange = (partial: Partial<CandidateForm>) => {
@@ -1190,23 +1206,6 @@ export default function ApplyPage() {
     setSubmitting(true);
     setError("");
     try {
-      // 사진 업로드
-      let uploadedPhotoUrl: string | null = null;
-      if (photoFile && photoFile.name) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const fileName = `public/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("candidate-photos")
-          .upload(fileName, photoFile, { contentType: photoFile.type });
-        if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage
-            .from("candidate-photos")
-            .getPublicUrl(uploadData.path);
-          uploadedPhotoUrl = urlData.publicUrl;
-          setPhotoUrl(uploadedPhotoUrl);
-        }
-      }
-
       const { error: dbError } = await supabase.from("election_candidates").insert({
         name: form.name,
         position: form.position,
@@ -1251,7 +1250,7 @@ export default function ApplyPage() {
         service_records: form.serviceRecords,
         checklist_score: score,
         status: "submitted",
-        ...(uploadedPhotoUrl ? { photo_url: uploadedPhotoUrl } : {}),
+        ...(photoUrl ? { photo_url: photoUrl } : {}),
       });
 
       if (dbError) throw dbError;
