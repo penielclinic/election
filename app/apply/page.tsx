@@ -1251,7 +1251,7 @@ export default function ApplyPage() {
         service_records: form.serviceRecords,
         checklist_score: score,
         status: "submitted",
-        photo_url: uploadedPhotoUrl,
+        ...(uploadedPhotoUrl ? { photo_url: uploadedPhotoUrl } : {}),
       });
 
       if (dbError) throw dbError;
