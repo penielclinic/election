@@ -1144,6 +1144,90 @@ export default function ApplyPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [parsing, setParsing] = useState(false);
+  const [parseResult, setParseResult] = useState<"success" | "error" | null>(null);
+  const [parseError, setParseError] = useState("");
+
+  const handleAutoFill = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setParsing(true);
+    setParseResult(null);
+    setParseError("");
+    try {
+      const fd = new FormData();
+      files.forEach((f) => fd.append("files", f));
+      const res = await fetch("/api/parse-form", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "오류가 발생했습니다.");
+
+      // serviceRecords 병합 (기본값 위에 AI 결과 덮어쓰기)
+      const base = initServiceRecords();
+      if (data.serviceRecords) {
+        for (const year of [2021, 2022, 2023, 2024, 2025]) {
+          if (data.serviceRecords[year] || data.serviceRecords[String(year)]) {
+            const src = data.serviceRecords[year] ?? data.serviceRecords[String(year)];
+            for (const type of SERVICE_TYPES) {
+              base[year][type] = src[type] ?? false;
+            }
+          }
+        }
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        ...(data.name ? { name: data.name } : {}),
+        ...(data.position ? { position: data.position } : {}),
+        ...(data.birthDate ? { birthDate: data.birthDate } : {}),
+        ...(data.churchRegisterDate ? { churchRegisterDate: data.churchRegisterDate } : {}),
+        ...(data.baptismDate ? { baptismDate: data.baptismDate } : {}),
+        ...(data.baptismChurch ? { baptismChurch: data.baptismChurch } : {}),
+        ...(data.officiantPastor ? { officiantPastor: data.officiantPastor } : {}),
+        ...(data.ordinationDate ? { ordinationDate: data.ordinationDate } : {}),
+        ...(data.ordinationChurch ? { ordinationChurch: data.ordinationChurch } : {}),
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.email ? { email: data.email } : {}),
+        ...(data.address ? { address: data.address } : {}),
+        ...(data.familyMembers?.length > 0 ? { familyMembers: data.familyMembers } : {}),
+        ...(data.careerHistory?.length > 0 ? { careerHistory: data.careerHistory } : {}),
+        ...(data.worshipSundayMain ? { worshipSundayMain: data.worshipSundayMain } : {}),
+        ...(data.worshipSundayDay ? { worshipSundayDay: data.worshipSundayDay } : {}),
+        ...(data.worshipWednesday ? { worshipWednesday: data.worshipWednesday } : {}),
+        ...(data.worshipFriday ? { worshipFriday: data.worshipFriday } : {}),
+        ...(data.worshipMission ? { worshipMission: data.worshipMission } : {}),
+        ...(data.dawnPrayerWeekly ? { dawnPrayerWeekly: data.dawnPrayerWeekly } : {}),
+        ...(data.tithe !== null && data.tithe !== undefined ? { tithe: data.tithe } : {}),
+        ...(data.evangelismCount ? { evangelismCount: data.evangelismCount } : {}),
+        ...(data.q1SundayWorship !== null && data.q1SundayWorship !== undefined ? { q1SundayWorship: data.q1SundayWorship } : {}),
+        ...(data.q2EveningWorship !== null && data.q2EveningWorship !== undefined ? { q2EveningWorship: data.q2EveningWorship } : {}),
+        ...(data.q2EveningWorshipReason ? { q2EveningWorshipReason: data.q2EveningWorshipReason } : {}),
+        ...(data.q3WednesdayPrayer !== null && data.q3WednesdayPrayer !== undefined ? { q3WednesdayPrayer: data.q3WednesdayPrayer } : {}),
+        ...(data.q3WednesdayPrayerReason ? { q3WednesdayPrayerReason: data.q3WednesdayPrayerReason } : {}),
+        ...(data.q4FridayPrayer !== null && data.q4FridayPrayer !== undefined ? { q4FridayPrayer: data.q4FridayPrayer } : {}),
+        ...(data.q4FridayPrayerReason ? { q4FridayPrayerReason: data.q4FridayPrayerReason } : {}),
+        ...(data.q5DawnPrayer !== null && data.q5DawnPrayer !== undefined ? { q5DawnPrayer: data.q5DawnPrayer } : {}),
+        ...(data.q5DawnPrayerReason ? { q5DawnPrayerReason: data.q5DawnPrayerReason } : {}),
+        ...(data.q6SpecialMeeting !== null && data.q6SpecialMeeting !== undefined ? { q6SpecialMeeting: data.q6SpecialMeeting } : {}),
+        ...(data.q7SpiritBaptism !== null && data.q7SpiritBaptism !== undefined ? { q7SpiritBaptism: data.q7SpiritBaptism } : {}),
+        ...(data.q7SpiritEvidence ? { q7SpiritEvidence: data.q7SpiritEvidence } : {}),
+        ...(data.q8AlcoholResolved !== null && data.q8AlcoholResolved !== undefined ? { q8AlcoholResolved: data.q8AlcoholResolved } : {}),
+        ...(data.q9Tithe !== null && data.q9Tithe !== undefined ? { q9Tithe: data.q9Tithe } : {}),
+        ...(data.q10Thanksgiving !== null && data.q10Thanksgiving !== undefined ? { q10Thanksgiving: data.q10Thanksgiving } : {}),
+        ...(data.q11SeasonalOffering !== null && data.q11SeasonalOffering !== undefined ? { q11SeasonalOffering: data.q11SeasonalOffering } : {}),
+        ...(data.q12FamilyFaith !== null && data.q12FamilyFaith !== undefined ? { q12FamilyFaith: data.q12FamilyFaith } : {}),
+        ...(data.q13MinistryCooperation !== null && data.q13MinistryCooperation !== undefined ? { q13MinistryCooperation: data.q13MinistryCooperation } : {}),
+        serviceRecords: base,
+      }));
+      setParseResult("success");
+      // 입력 초기화 (동일 파일 재업로드 가능하도록)
+      e.target.value = "";
+    } catch (err: unknown) {
+      setParseError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      setParseResult("error");
+    } finally {
+      setParsing(false);
+    }
+  };
 
   const compressImage = (file: File): Promise<string> =>
     new Promise((resolve) => {
@@ -1340,6 +1424,47 @@ export default function ApplyPage() {
         <div className="text-center mb-6">
           <p className="text-xs text-amber-700 font-semibold tracking-widest">해운대순복음교회</p>
           <h1 className="text-xl font-bold text-gray-900 mt-1">항존직 후보 지원</h1>
+        </div>
+
+        {/* AI 자동입력 */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-amber-700 font-semibold text-sm">AI 자동입력</span>
+            <span className="text-xs text-amber-500" style={{ wordBreak: "keep-all" }}>
+              작성된 신청서·자기점검표 이미지를 업로드하면 자동으로 입력됩니다
+            </span>
+          </div>
+          <label className="inline-flex items-center gap-2 cursor-pointer bg-white border border-amber-300 text-amber-700 text-xs font-medium px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors">
+            {parsing ? (
+              <>
+                <span className="inline-block w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                AI 분석 중...
+              </>
+            ) : (
+              <>
+                <span>📄</span>
+                파일 선택 (이미지·PDF, 복수선택 가능)
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+              multiple
+              className="hidden"
+              disabled={parsing}
+              onChange={handleAutoFill}
+            />
+          </label>
+          {parseResult === "success" && (
+            <p className="mt-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-1.5">
+              ✓ 자동입력 완료! 각 단계에서 내용을 확인하고 수정하세요.
+            </p>
+          )}
+          {parseResult === "error" && (
+            <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-1.5">
+              ✗ {parseError}
+            </p>
+          )}
         </div>
 
         <StepIndicator step={step} />
