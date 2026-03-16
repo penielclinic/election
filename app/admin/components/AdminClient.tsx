@@ -772,42 +772,68 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {/* 목록 */}
+            {/* 후보자별 그룹 목록 */}
             {recLoading ? (
               <div className="text-center py-10 text-gray-400">불러오는 중...</div>
             ) : recFiltered.length === 0 ? (
               <div className="text-center py-10 text-gray-400">접수된 추천서가 없습니다.</div>
             ) : (
-              <div className="space-y-2">
-                {recFiltered.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => setSelectedRec(r)}
-                    className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-shadow text-left"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-gray-900 whitespace-nowrap">
-                          {r.candidate_name}
+              <div className="space-y-3">
+                {/* 후보자별로 묶기 */}
+                {Array.from(
+                  recFiltered.reduce((map, r) => {
+                    const key = `${r.recommend_position}__${r.candidate_name}`;
+                    if (!map.has(key)) map.set(key, []);
+                    map.get(key)!.push(r);
+                    return map;
+                  }, new Map<string, RawRecommendation[]>())
+                ).map(([key, recs]) => {
+                  const first = recs[0];
+                  return (
+                    <div key={key} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                      {/* 후보자 헤더 */}
+                      <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100">
+                        <span className="font-bold text-gray-900 whitespace-nowrap">{first.candidate_name}</span>
+                        <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {first.recommend_position}
                         </span>
-                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-                          {r.recommend_position}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${REC_STATUS_COLORS[r.status]}`}>
-                          {REC_STATUS_LABELS[r.status]}
+                        <span className="ml-auto text-xs text-amber-700 font-semibold whitespace-nowrap">
+                          추천 {recs.length}건
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        추천인: <span className="whitespace-nowrap">{r.recommender_name}</span>
-                        {r.recommender_position && <span className="whitespace-nowrap"> ({r.recommender_position})</span>}
-                        {" "}· {r.recommender_phone} · {new Date(r.created_at).toLocaleDateString("ko-KR")}
-                      </p>
-                      {r.recommend_reason && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{r.recommend_reason}</p>
-                      )}
+                      {/* 추천인 목록 */}
+                      <div className="divide-y divide-gray-50">
+                        {recs.map((r) => (
+                          <button
+                            key={r.id}
+                            onClick={() => setSelectedRec(r)}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-gray-800 whitespace-nowrap">
+                                  {r.recommender_name}
+                                </span>
+                                {r.recommender_position && (
+                                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                                    ({r.recommender_position})
+                                  </span>
+                                )}
+                                <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${REC_STATUS_COLORS[r.status]}`}>
+                                  {REC_STATUS_LABELS[r.status]}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                {r.recommender_phone} · {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-300 shrink-0">›</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
