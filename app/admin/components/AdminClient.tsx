@@ -10,6 +10,151 @@ import type { PrintCandidate } from "@/lib/printPDF";
 
 const ADMIN_PASSWORD = "20261900";
 
+// ── 추천서 ──────────────────────────────────────────
+interface RawRecommendation {
+  id: string;
+  created_at: string;
+  recommend_position: string;
+  candidate_name: string;
+  candidate_birth_date: string;
+  candidate_phone: string;
+  recommender_name: string;
+  recommender_phone: string;
+  recommender_relationship: string;
+  recommend_reason: string;
+  status: string;
+}
+
+const REC_STATUS_LABELS: Record<string, string> = {
+  submitted: "접수됨",
+  reviewed: "검토중",
+  approved: "승인",
+  rejected: "반려",
+};
+
+const REC_STATUS_COLORS: Record<string, string> = {
+  submitted: "bg-blue-100 text-blue-700",
+  reviewed: "bg-yellow-100 text-yellow-700",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+};
+
+function RecommendDetailModal({
+  rec,
+  onClose,
+  onStatusChange,
+  onDelete,
+}: {
+  rec: RawRecommendation;
+  onClose: () => void;
+  onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-white rounded-2xl shadow-xl my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-5 border-b gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              <span className="whitespace-nowrap">{rec.candidate_name}</span>{" "}
+              <span className="text-amber-600 text-base font-semibold">{rec.recommend_position} 추천</span>
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              접수: {new Date(rec.created_at).toLocaleString("ko-KR")}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 rounded text-xs font-medium ${REC_STATUS_COLORS[rec.status]}`}>
+              {REC_STATUS_LABELS[rec.status]}
+            </span>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-1 text-sm">
+          <div className="mb-4">
+            <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 border-b border-amber-100 pb-1">후보자 정보</p>
+            {[
+              ["직분", rec.recommend_position],
+              ["이름", rec.candidate_name],
+              ["생년월일", rec.candidate_birth_date],
+              ["연락처", rec.candidate_phone],
+            ].map(([label, val]) => (
+              <div key={label} className="flex gap-2 py-1 border-b border-gray-50">
+                <span className="text-gray-500 w-24 shrink-0 whitespace-nowrap">{label}</span>
+                <span className="text-gray-800">{val || "-"}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-4">
+            <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 border-b border-amber-100 pb-1">추천인 정보</p>
+            {[
+              ["이름", rec.recommender_name],
+              ["연락처", rec.recommender_phone],
+              ["관계", rec.recommender_relationship],
+            ].map(([label, val]) => (
+              <div key={label} className="flex gap-2 py-1 border-b border-gray-50">
+                <span className="text-gray-500 w-24 shrink-0 whitespace-nowrap">{label}</span>
+                <span className="text-gray-800">{val || "-"}</span>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 border-b border-amber-100 pb-1">추천 사유</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed" style={{ wordBreak: "keep-all" }}>
+              {rec.recommend_reason || "-"}
+            </p>
+          </div>
+
+          {/* 상태 변경 */}
+          <div className="border-t border-gray-100 pt-4 mt-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">상태 변경</p>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(REC_STATUS_LABELS).map(([status, label]) => (
+                <button
+                  key={status}
+                  onClick={() => onStatusChange(rec.id, status)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    rec.status === status
+                      ? REC_STATUS_COLORS[status] + " ring-1 ring-offset-1 ring-current"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 삭제 */}
+          <div className="border-t border-gray-100 pt-4 mt-4">
+            <button
+              onClick={() => {
+                if (confirm(`"${rec.candidate_name}" 추천서를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                  onDelete(rec.id);
+                }
+              }}
+              className="w-full py-2 rounded-lg text-xs font-medium text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
+            >
+              추천서 삭제
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface RawCandidate {
   id: string;
   created_at: string;
@@ -388,12 +533,21 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState("");
   const [pwError, setPwError] = useState("");
+  const [tab, setTab] = useState<"candidates" | "recommendations">("candidates");
+
+  // 지원서
   const [candidates, setCandidates] = useState<RawCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<RawCandidate | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "score" | "name">("date");
   const [sortAsc, setSortAsc] = useState(false);
+
+  // 추천서
+  const [recommendations, setRecommendations] = useState<RawRecommendation[]>([]);
+  const [recLoading, setRecLoading] = useState(false);
+  const [selectedRec, setSelectedRec] = useState<RawRecommendation | null>(null);
+  const [recFilter, setRecFilter] = useState<string>("all");
 
   const login = () => {
     if (pw === ADMIN_PASSWORD) {
@@ -414,9 +568,34 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const fetchRecommendations = async () => {
+    setRecLoading(true);
+    const { data, error } = await supabase
+      .from("election_recommendations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setRecommendations(data as RawRecommendation[]);
+    setRecLoading(false);
+  };
+
   useEffect(() => {
-    if (authed) fetchCandidates();
+    if (authed) {
+      fetchCandidates();
+      fetchRecommendations();
+    }
   }, [authed]);
+
+  const handleRecStatusChange = async (id: string, status: string) => {
+    await supabase.from("election_recommendations").update({ status }).eq("id", id);
+    setRecommendations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    if (selectedRec?.id === id) setSelectedRec((prev) => prev ? { ...prev, status } : null);
+  };
+
+  const handleRecDelete = async (id: string) => {
+    await supabase.from("election_recommendations").delete().eq("id", id);
+    setRecommendations((prev) => prev.filter((r) => r.id !== id));
+    setSelectedRec(null);
+  };
 
   const handleStatusChange = async (id: string, status: string) => {
     await supabase.from("election_candidates").update({ status }).eq("id", id);
@@ -485,23 +664,136 @@ export default function AdminPage() {
     else { setSortBy(key); setSortAsc(key === "name"); }
   };
 
+  const recFiltered = recFilter === "all"
+    ? recommendations
+    : recommendations.filter((r) => r.recommend_position === recFilter);
+
   return (
     <main className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* 헤더 */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900">항존직 선거 관리</h1>
             <p className="text-xs text-gray-500 mt-0.5">해운대순복음교회 선거관리위원회</p>
           </div>
           <button
-            onClick={fetchCandidates}
+            onClick={() => { fetchCandidates(); fetchRecommendations(); }}
             className="text-xs text-amber-600 border border-amber-300 px-3 py-1.5 rounded-lg hover:bg-amber-50 transition-colors"
           >
             새로고침
           </button>
         </div>
 
+        {/* 탭 */}
+        <div className="flex gap-2 mb-5 border-b border-gray-200">
+          <button
+            onClick={() => setTab("candidates")}
+            className={`pb-2 px-1 text-sm font-semibold border-b-2 transition-colors ${
+              tab === "candidates"
+                ? "border-amber-600 text-amber-700"
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            지원서{" "}
+            <span className="ml-1 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
+              {candidates.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setTab("recommendations")}
+            className={`pb-2 px-1 text-sm font-semibold border-b-2 transition-colors ${
+              tab === "recommendations"
+                ? "border-amber-600 text-amber-700"
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            추천서{" "}
+            <span className="ml-1 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
+              {recommendations.length}
+            </span>
+          </button>
+        </div>
+
+        {/* ── 추천서 탭 ── */}
+        {tab === "recommendations" && (
+          <>
+            {/* 요약 */}
+            <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <p className="text-xs text-gray-500">전체 추천</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{recommendations.length}건</p>
+              </div>
+              {["장로", "안수집사", "권사"].map((pos) => (
+                <div key={pos} className="bg-white rounded-xl p-4 shadow-sm">
+                  <p className="text-xs text-gray-500">{pos}</p>
+                  <p className="text-2xl font-bold text-amber-600 mt-1">
+                    {recommendations.filter((r) => r.recommend_position === pos).length}건
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* 필터 */}
+            <div className="flex gap-2 mb-4">
+              {["all", "장로", "안수집사", "권사"].map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => setRecFilter(pos)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    recFilter === pos
+                      ? "bg-amber-600 text-white"
+                      : "bg-white border border-gray-200 text-gray-600 hover:border-amber-300"
+                  }`}
+                >
+                  {pos === "all" ? "전체" : pos}
+                </button>
+              ))}
+            </div>
+
+            {/* 목록 */}
+            {recLoading ? (
+              <div className="text-center py-10 text-gray-400">불러오는 중...</div>
+            ) : recFiltered.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">접수된 추천서가 없습니다.</div>
+            ) : (
+              <div className="space-y-2">
+                {recFiltered.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setSelectedRec(r)}
+                    className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-shadow text-left"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-gray-900 whitespace-nowrap">
+                          {r.candidate_name}
+                        </span>
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {r.recommend_position}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${REC_STATUS_COLORS[r.status]}`}>
+                          {REC_STATUS_LABELS[r.status]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        추천인: <span className="whitespace-nowrap">{r.recommender_name}</span>{" "}
+                        · {r.recommender_phone} · {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                      </p>
+                      {r.recommend_reason && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{r.recommend_reason}</p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── 지원서 탭 ── */}
+        {tab === "candidates" && (
+        <>
         {/* 요약 카드 */}
         <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -613,6 +905,8 @@ export default function AdminPage() {
             ))}
           </div>
         )}
+        </>
+        )}
       </div>
 
       {selected && (
@@ -621,6 +915,15 @@ export default function AdminPage() {
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
           onDelete={handleDelete}
+        />
+      )}
+
+      {selectedRec && (
+        <RecommendDetailModal
+          rec={selectedRec}
+          onClose={() => setSelectedRec(null)}
+          onStatusChange={handleRecStatusChange}
+          onDelete={handleRecDelete}
         />
       )}
     </main>

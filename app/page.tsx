@@ -97,6 +97,18 @@ export default function Home() {
         <p className="text-xs text-center text-gray-400 mt-3" style={{ wordBreak: "keep-all" }}>
           지원 신청서와 자기점검표를 온라인으로 작성하고 제출합니다.
         </p>
+
+        {/* 추천서 버튼 */}
+        <Link
+          href="/recommend"
+          className="block w-full text-center mt-3 bg-white border-2 border-amber-500 hover:bg-amber-50 text-amber-700 font-semibold py-3 rounded-xl transition-colors"
+        >
+          후보자 추천서 제출하기
+        </Link>
+
+        <p className="text-xs text-center text-gray-400 mt-2" style={{ wordBreak: "keep-all" }}>
+          장로 · 안수집사 · 권사 후보를 온라인으로 추천하실 수 있습니다.
+        </p>
       </div>
 
       <div className="mt-4">

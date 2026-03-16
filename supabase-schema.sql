@@ -67,6 +67,42 @@ create table if not exists election_candidates (
 -- photo_url 컬럼 추가 (기존 테이블에 적용 시)
 -- alter table election_candidates add column if not exists photo_url text;
 
+-- ── 항존직 후보자 추천서 테이블 ─────────────────────────────
+create table if not exists election_recommendations (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+
+  recommend_position text not null, -- 장로/안수집사/권사
+  candidate_name text not null,
+  candidate_birth_date text,
+  candidate_phone text,
+
+  recommender_name text not null,
+  recommender_phone text not null,
+  recommender_relationship text,
+  recommend_reason text not null,
+
+  status text default 'submitted'
+);
+
+alter table election_recommendations enable row level security;
+
+create policy "Anyone can insert recommendations"
+  on election_recommendations for insert
+  with check (true);
+
+create policy "Anyone can read recommendations"
+  on election_recommendations for select
+  using (true);
+
+create policy "Anyone can update recommendations"
+  on election_recommendations for update
+  using (true);
+
+create policy "Anyone can delete recommendations"
+  on election_recommendations for delete
+  using (true);
+
 -- RLS 활성화
 alter table election_candidates enable row level security;
 
