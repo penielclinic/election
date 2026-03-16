@@ -106,7 +106,7 @@ export default function Home() {
             className="flex items-center justify-center gap-2 w-full text-center bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border-2 border-amber-500 text-amber-800 font-bold py-4 rounded-2xl shadow-md shadow-amber-100 transition-all hover:shadow-amber-200 hover:-translate-y-0.5"
           >
             <span className="text-base">📋</span>
-            <span>후보자 추천서 제출하기</span>
+            <span>후보자 추천서 등록하기</span>
           </Link>
           <p className="text-xs text-center text-gray-400" style={{ wordBreak: "keep-all" }}>
             장로 · 안수집사 · 권사 후보를 온라인으로 추천하실 수 있습니다.
