@@ -940,6 +940,16 @@ export default function AdminPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${STATUS_COLORS[c.status]}`}>
                       {STATUS_LABELS[c.status]}
                     </span>
+                    {(() => {
+                      const count = recommendations.filter(
+                        (r) => r.candidate_name === c.name && r.recommend_position === c.position
+                      ).length;
+                      return count > 0 ? (
+                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          추천 {count}명
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {c.phone} · {new Date(c.created_at).toLocaleDateString("ko-KR")}
