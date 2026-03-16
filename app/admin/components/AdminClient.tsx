@@ -19,6 +19,7 @@ interface RawRecommendation {
   candidate_birth_date: string;
   candidate_phone: string;
   recommender_name: string;
+  recommender_position: string;
   recommender_phone: string;
   recommender_relationship: string;
   faith_worship_attendance: string;
@@ -102,6 +103,7 @@ function RecommendDetailModal({
             <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 border-b border-amber-100 pb-1">추천인 정보</p>
             {[
               ["이름", rec.recommender_name],
+              ["직분", rec.recommender_position],
               ["연락처", rec.recommender_phone],
               ["관계", rec.recommender_relationship],
             ].map(([label, val]) => (
@@ -796,8 +798,9 @@ export default function AdminPage() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        추천인: <span className="whitespace-nowrap">{r.recommender_name}</span>{" "}
-                        · {r.recommender_phone} · {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                        추천인: <span className="whitespace-nowrap">{r.recommender_name}</span>
+                        {r.recommender_position && <span className="whitespace-nowrap"> ({r.recommender_position})</span>}
+                        {" "}· {r.recommender_phone} · {new Date(r.created_at).toLocaleDateString("ko-KR")}
                       </p>
                       {r.recommend_reason && (
                         <p className="text-xs text-gray-500 mt-1 line-clamp-1">{r.recommend_reason}</p>

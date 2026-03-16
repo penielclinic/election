@@ -78,6 +78,7 @@ create table if not exists election_recommendations (
   candidate_phone text,
 
   recommender_name text not null,
+  recommender_position text,
   recommender_phone text not null,
   recommender_relationship text,
   faith_worship_attendance text,   -- 예배출석 (주일예배)

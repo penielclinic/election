@@ -19,6 +19,7 @@ interface RecommendForm {
   candidate_birth_date: string;
   candidate_phone: string;
   recommender_name: string;
+  recommender_position: string;
   recommender_phone: string;
   recommender_relationship: string;
   faith_worship_attendance: string;
@@ -33,6 +34,7 @@ const initialForm: RecommendForm = {
   candidate_birth_date: "",
   candidate_phone: "",
   recommender_name: "",
+  recommender_position: "",
   recommender_phone: "",
   recommender_relationship: "",
   faith_worship_attendance: "",
@@ -105,6 +107,7 @@ export default function RecommendClient() {
       candidate_birth_date: form.candidate_birth_date.trim(),
       candidate_phone: form.candidate_phone.trim(),
       recommender_name: form.recommender_name.trim(),
+      recommender_position: form.recommender_position.trim(),
       recommender_phone: form.recommender_phone.trim(),
       recommender_relationship: form.recommender_relationship.trim(),
       faith_worship_attendance: form.faith_worship_attendance.trim(),
@@ -239,13 +242,23 @@ export default function RecommendClient() {
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">추천인 정보</p>
           </div>
 
-          <div>
-            <Label>추천인 이름 *</Label>
-            <Input
-              value={form.recommender_name}
-              onChange={(v) => set("recommender_name", v)}
-              placeholder="성명"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>추천인 이름 *</Label>
+              <Input
+                value={form.recommender_name}
+                onChange={(v) => set("recommender_name", v)}
+                placeholder="성명"
+              />
+            </div>
+            <div>
+              <Label>추천인 직분</Label>
+              <Input
+                value={form.recommender_position}
+                onChange={(v) => set("recommender_position", v)}
+                placeholder="예: 집사, 권사, 장로"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
