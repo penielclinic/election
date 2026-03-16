@@ -272,6 +272,119 @@ export function printCandidatePDF(data: PrintCandidate): void {
   win.document.close();
 }
 
+export interface PrintRecommendation {
+  recommend_position: string;
+  candidate_name: string;
+  candidate_birth_date?: string;
+  candidate_phone?: string;
+  recommender_name: string;
+  recommender_position?: string;
+  recommender_phone: string;
+  recommender_relationship?: string;
+  faith_worship_attendance?: string;
+  faith_service_history?: string;
+  faith_service_department?: string;
+  recommend_reason: string;
+  created_at: string;
+  status: string;
+}
+
+export function printRecommendationPDF(data: PrintRecommendation): void {
+  const statusLabel: Record<string, string> = {
+    submitted: "접수됨", reviewed: "검토중", approved: "승인", rejected: "반려",
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>후보자 추천서 - ${esc(data.candidate_name)}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', AppleGothic, sans-serif;
+      font-size: 10.5pt; color: #111; background: #fff;
+      padding: 18mm 20mm;
+    }
+    h1 { font-size: 17pt; text-align: center; letter-spacing: 2px; margin-bottom: 4px; }
+    .org { font-size: 9pt; color: #777; text-align: center; margin-bottom: 20px; }
+    .section { margin-bottom: 14px; }
+    .section-title {
+      font-size: 9.5pt; font-weight: bold;
+      background: #fdf3e0; padding: 4px 8px;
+      border-left: 3px solid #b45309; margin-bottom: 6px;
+    }
+    .row { display: flex; padding: 4px 0; border-bottom: 0.5px solid #eee; }
+    .label { width: 110px; color: #555; flex-shrink: 0; font-size: 9.5pt; }
+    .value { flex: 1; font-size: 9.5pt; word-break: keep-all; }
+    .text-block {
+      font-size: 9.5pt; line-height: 1.7; white-space: pre-wrap;
+      word-break: keep-all; background: #fafafa;
+      border: 0.5px solid #e8e8e8; border-radius: 4px;
+      padding: 8px 10px; margin-top: 4px;
+    }
+    .footer { font-size: 8pt; color: #aaa; text-align: right; margin-top: 14px; }
+    @media print {
+      body { padding: 12mm 15mm; }
+      @page { margin: 8mm; size: A4; }
+    }
+  </style>
+</head>
+<body>
+  <h1>항존직 후보자 추천서</h1>
+  <p class="org">해운대순복음교회 선거관리위원회 &nbsp;|&nbsp; 접수: ${new Date(data.created_at).toLocaleString("ko-KR")} &nbsp;|&nbsp; 상태: ${statusLabel[data.status] ?? data.status}</p>
+
+  <div class="section">
+    <div class="section-title">후보자 정보</div>
+    ${row("추천 직분", data.recommend_position)}
+    ${row("성명", data.candidate_name)}
+    ${row("생년월일", data.candidate_birth_date)}
+    ${row("연락처", data.candidate_phone)}
+  </div>
+
+  <div class="section">
+    <div class="section-title">추천인 정보</div>
+    ${row("성명", data.recommender_name)}
+    ${row("직분", data.recommender_position)}
+    ${row("연락처", data.recommender_phone)}
+    ${row("관계", data.recommender_relationship)}
+  </div>
+
+  <div class="section">
+    <div class="section-title">후보자 신앙생활</div>
+    <div style="margin-bottom:8px">
+      <div class="label" style="font-size:9pt;color:#555;margin-bottom:2px">예배출석 (주일예배)</div>
+      <div class="text-block">${esc(data.faith_worship_attendance) === "-" ? "-" : esc(data.faith_worship_attendance)}</div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div class="label" style="font-size:9pt;color:#555;margin-bottom:2px">봉사이력 (본교회)</div>
+      <div class="text-block">${esc(data.faith_service_history) === "-" ? "-" : esc(data.faith_service_history)}</div>
+    </div>
+    <div>
+      <div class="label" style="font-size:9pt;color:#555;margin-bottom:2px">봉사부서 (현재)</div>
+      <div class="text-block">${esc(data.faith_service_department) === "-" ? "-" : esc(data.faith_service_department)}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">추천 사유</div>
+    <div class="text-block">${esc(data.recommend_reason)}</div>
+  </div>
+
+  <p class="footer">출력일: ${new Date().toLocaleString("ko-KR")}</p>
+  <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank", "width=900,height=1000");
+  if (!win) {
+    alert("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.");
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+}
+
 const STATUS_LABELS: Record<string, string> = {
   submitted: "접수됨",
   reviewed: "검토중",

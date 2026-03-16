@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { SCORE_BREAKDOWN } from "@/lib/scoring";
 import { SERVICE_TYPES, SERVICE_YEARS } from "@/lib/types";
 import type { ServiceRecords, ServiceType } from "@/lib/types";
-import { printCandidatePDF, printCandidateListPDF } from "@/lib/printPDF";
+import { printCandidatePDF, printCandidateListPDF, printRecommendationPDF } from "@/lib/printPDF";
 import type { PrintCandidate } from "@/lib/printPDF";
 
 const ADMIN_PASSWORD = "20261900";
@@ -77,6 +77,12 @@ function RecommendDetailModal({
             <span className={`px-2 py-1 rounded text-xs font-medium ${REC_STATUS_COLORS[rec.status]}`}>
               {REC_STATUS_LABELS[rec.status]}
             </span>
+            <button
+              onClick={() => printRecommendationPDF(rec)}
+              className="text-xs text-amber-600 border border-amber-300 px-2.5 py-1 rounded-lg hover:bg-amber-50 transition-colors"
+            >
+              PDF 저장
+            </button>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">
               ×
             </button>
